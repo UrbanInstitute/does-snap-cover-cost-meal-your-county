@@ -34,19 +34,19 @@ This project runs on Vite, Svelte, and D3.
 ### Svelte module descriptions
 App.svelte: the entry point to the project. Holds constant data in one place, including explainer text for time frames and dropdown labels, as well as outline colors.
 
-SnapUrbanMap.svelte: the true beginning of top-level module organization. Holds default values for internal variables.
+`SnapUrbanMap.svelte`: the true beginning of top-level module organization. Holds default values for internal variables.
 
-Sidebar.svelte: holds the searchbar, time frame dropdown, and information about each time frame. 
+`Sidebar.svelte`: holds the searchbar, time frame dropdown, and information about each time frame. 
 
-HoverBarsComparison.svelte: dynamic bars for the average meal price for the hovered county as well as the maximum SNAP benefit. 
+`HoverBarsComparison.svelte`: dynamic bars for the average meal price for the hovered county as well as the maximum SNAP benefit. 
 
-ComparisonBars.svelte: a dropdown information panel showing bars for meal price and SNAP benefit across all timeframes for the hovered county. 
+`ComparisonBars.svelte`: a dropdown information panel showing bars for meal price and SNAP benefit across all timeframes for the hovered county. 
 
-Map.svelte: contains all logic for rendering, maneuvering, hovering and selecting the map. 
+`Map.svelte`: contains all logic for rendering, maneuvering, hovering and selecting the map. 
 
-HoverInfoBadge: displays the current county's average meal price and percent difference from the SNAP benefit there. 
+`HoverInfoBadge`: displays the current county's average meal price and percent difference from the SNAP benefit there. 
 
-Ruccbar.svelte: an svg arrangement of bubbles for filtering county data in the map by the selected RUCC. Multi-selectable. Includes a popup explaining the code on hover.
+`Ruccbar.svelte`: an svg arrangement of bubbles for filtering county data in the map by the selected RUCC. Multi-selectable. Includes a popup explaining the code on hover.
 
 
 ### Running locally
