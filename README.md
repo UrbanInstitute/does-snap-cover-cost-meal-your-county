@@ -15,13 +15,13 @@ Staging link:[https://apps-staging.urban.org/features/does-snap-cover-meal-2.0/]
 
 Production link: [https://www.urban.org/data-tools/does-snap-cover-cost-meal-your-county-2022](https://www.urban.org/data-tools/does-snap-cover-cost-meal-your-county-2022)
 
-Data catalogue link: [https://datacatalog.urban.org/dataset/snap-meal-gap-2022](https://datacatalog.urban.org/dataset/snap-meal-gap-2022)
+Data catalog link: [https://datacatalog.urban.org/dataset/snap-meal-gap-2022](https://datacatalog.urban.org/dataset/snap-meal-gap-2022)
 
 
 ## Data
 Original source: Meal price data come from Feeding America's Map the Meal Gap study and were processed by Urban researchers. Shapefiles come from the U.S. census bureau.
 
-How are the data prepared: No preparation was needed for this dataset. The shapefiles can be pulled and processed by running ```make clean``` and ```make```in a terminal.
+How were the data prepared: No preparation was needed for this dataset. The shapefiles can be pulled and processed by running ```make clean``` and ```make```in a terminal.
 
 Where do the geojson and csv live: County-level topojson and csv are kept in the ```public``` folder.
 
@@ -32,7 +32,7 @@ Where do the geojson and csv live: County-level topojson and csv are kept in the
 This project runs on Vite, Svelte, and D3.
 
 ### Svelte module descriptions
-App.svelte: the entry point to the project. Holds constant data in one place, including explainer text for time frames and dropdown labels, as well as outline colors.
+`App.svelte`: the entry point to the project. Holds constant data in one place, including explainer text for time frames and dropdown labels, as well as outline colors.
 
 `SnapUrbanMap.svelte`: the true beginning of top-level module organization. Holds default values for internal variables.
 
