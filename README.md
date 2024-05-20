@@ -13,9 +13,9 @@ Lead Researcher: Elaine Waxman
 
 Staging link:[https://apps-staging.urban.org/features/does-snap-cover-meal-2.0/](https://apps-staging.urban.org/features/does-snap-cover-meal-2.0/)
 
-Production link: [https://www.urban.org/data-tools/does-snap-cover-cost-meal-your-county-2022](https://www.urban.org/data-tools/does-snap-cover-cost-meal-your-county-2022)
+Production link: [https://www.urban.org/data-tools/does-snap-cover-cost-meal-your-county](https://www.urban.org/data-tools/does-snap-cover-cost-meal-your-county)
 
-Data catalogue link: [https://datacatalog.urban.org/dataset/snap-meal-gap-2022](https://datacatalog.urban.org/dataset/snap-meal-gap-2022)
+Data catalogue link: [https://datacatalog.urban.org/dataset/snap-meal-gap-2023](https://datacatalog.urban.org/dataset/snap-meal-gap-2023)
 
 
 ## Data
