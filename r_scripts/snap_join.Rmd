@@ -1,0 +1,49 @@
+---
+title: "snap_join"
+author: "Rachel Marconi"
+date: "2024-04-16"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Import libraries
+```{r}
+library(tidyverse)
+library(janitor)
+library(dplyr)
+```
+
+# Grab file with all old data and file with newest data
+```{r}
+new <- read_csv('./input_data/comms_data_2023.csv') %>% 
+  rename(rucc_2023 = rucc)
+all_old <- read_csv('./input_data/snap-2-data-041423.csv') %>% 
+  rename(rucc_2022 = rucc)
+
+
+```
+
+# Join old data into new
+```{r}
+all_new <- all_old %>% 
+  full_join(new, by = c("countystate","state","fips"))
+
+```
+
+
+# Let's clarify some of these ids
+```{r} 
+all_new_unified <- all_new %>% 
+  select(fips,state,countystate,rucc_2023,rucc_2022,everything(),-metro.x,-metro.y,-...1)
+
+```
+
+# And... output
+```{r}
+write.csv(all_new_unified,"snap-2-data-041624.csv")
+```
+
+

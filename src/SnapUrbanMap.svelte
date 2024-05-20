@@ -14,15 +14,15 @@
   export let title;
   export let subtitle;
   export let explainerText;
-  export let shapefileLocation;
-  export let shapefileObjectName;
+  export let allShapefileLocations;
+  export let allShapefileObjectNames;
   export let shapefileAccessor = "id";
   export let shapeColName;
   export let outlineColor = "white";
   export let dataLocation;
   export let dataCols;
   export let dataColsLabels;
-  export let dataColsFormat = ".0f";
+  export let dataColsFormat = ".0%";
   export let selectedMetricName;
   export let naColor = "#5c5859";
   export let hoverOutlineColor = "#FDBE11";
@@ -81,7 +81,7 @@
     <div style="position: relative;">
       <ComparisonBars {hoverAllPrices} {hoverColor} {hoverTextColor} {dataColsLabels} {nationalPrices} {weHaveData}/>
       <Map 
-        {shapefileLocation} {shapefileAccessor} {shapefileObjectName} {shapeColName} 
+        {allShapefileLocations} {shapefileAccessor} {allShapefileObjectNames} {shapeColName} 
         {outlineColor} {dataLocation} {dataCols} {dataColsFormat} 
         {hoverOutlineColor} {descText} {albersProjectionFlag} width={mapWidth} {height} {naColor}
         bind:value = {value}

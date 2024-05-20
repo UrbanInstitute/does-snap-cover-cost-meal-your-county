@@ -20,7 +20,8 @@
         "Nonmetropolitan counties: completely rural, or urban population of less than 2,500, not adjacent to a metropolitan area"
     ]
 
-    let svgEl;
+    let svgEl; //for bubbles responsiveness
+    let ruccEl; //for analytics
     let popup;
     let clickedIndex = []; //something ridiculous out of bounds
     let popupIndex = 0; //controls which text is in popup, either clicked or hovered
@@ -119,13 +120,11 @@
     
     let logClickToGA = (ruccVal) => {
         gtag('event',
-            'button_click', //eventName
+            'dataviz_click',
             {
-                'firing-module-name':'snap-map', //firingModuleName
-                'target-classes':"rucc-flex",
-                'target-id':"",
-                'target-text':"RUCC sleection",
-                'click-target': ruccVal
+                'dataviz_title':'snap-farm-bill-map', 
+                'dataviz_target': ruccEl,
+                'dataviz_detail': "ruccbar_click--" + ruccVal
             }
         )
     }
@@ -134,7 +133,7 @@
 </script>
 
 <div style="position: relative;">
-    <div class="rucc-flex"  style="--bg-img: url({arrow});">
+    <div class="rucc-flex"  style="--bg-img: url({arrow});" bind:this={ruccEl}>
         <h6 class="more flexitem">More urban</h6>
         <div class="right arrow"></div>
         <div class="holdsbar">
@@ -170,6 +169,10 @@
 </div>
 
 <style>
+    g,g:focus,g:hover{
+        outline:none;
+    }
+
     .rucc-flex{
         display: flex;
         align-items: center;

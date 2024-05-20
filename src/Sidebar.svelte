@@ -17,6 +17,9 @@
   import dropdownArrow from "./assets/urban-select-2x.png"; //auto-converted to base64 inline (under 4kb)
   import SearchIcon from "./assets/icon-search.svg";
 
+  let searchbarEl;
+  let timeframeEl; 
+
   let windowWidth = 0;
   $: smallScreen = windowWidth < 800; 
 
@@ -24,26 +27,22 @@
     selectedCounty = detail.selected
 
     gtag('event',
-      'button_click', //eventName
+      'dataviz_click', 
       {
-          'firing-module-name':'snap-map', //firingModuleName
-          'target-classes':"dropdown-container",
-          'target-id':"",
-          'target-text':"Search for your county...",
-          'dropdown-select': detail.selected
+          'dataviz_title':'snap-farm-bill-map', 
+          'dataviz_target':searchbarEl,
+          'dataviz_detail': "county_searchbar_click--"+detail.selected
       }
     )
   }
 
   let onTimeframeChange = () => {
     gtag('event',
-      'button_click', //eventName
+      'dataviz_click',
       {
-          'firing-module-name':'snap-map', //firingModuleName
-          'target-classes':"dropdown-container",
-          'target-id':"",
-          'target-text':"Choose a timeframe:",
-          'dropdown-select': value
+          'dataviz_title':'snap-farm-bill-map', 
+          'dataviz_target':timeframeEl,
+          'dataviz_detail': "timeframe_dropdown_click--"+ value
       }
     )
   }
@@ -57,13 +56,13 @@
     <h2 class="chart-title">{title}</h2>
     <p class="chart-subtitle" role="heading" aria-level={5}>{subtitle}</p>
     <div class="filters">
-      <div class="dropdown-container  search-container {smallScreen ? 'render-up': "render-down"}">
+      <div class="dropdown-container  search-container {smallScreen ? 'render-up': "render-down"}" bind:this={searchbarEl}>
         <Typeahead data={allCounties} {extract} showDropdownOnFocus showAllResultsOnFocus hideLabel label="Search for your county" placeholder="Search for your county" on:select={onTypeaheadSelect}/>
         <div class="search">
           <SearchIcon alt="Search icon" viewBox = "0 0 48 48" width=20 height=20></SearchIcon>
       </div>
     </div>
-        <div class="dropdown-container">
+        <div class="dropdown-container" bind:this={timeframeEl}>
             <label aria-hidden="true" hidden for="opts">Choose a timeframe:</label>
             <select
                 bind:value
@@ -127,7 +126,7 @@
   }
 
   :global([data-svelte-typeahead] ul){
-    overflow: scroll;
+    overflow-y: scroll;
     max-height: 300px;
   }
 

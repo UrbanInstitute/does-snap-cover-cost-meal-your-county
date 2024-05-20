@@ -1,6 +1,7 @@
 <script>
     import InfoIcon from "./assets/icon-info.svg"
     import iconClose from "./assets/icon-close.png"
+  import PopupTooltip from "./PopupTooltip.svelte";
 
     export let hoverCountyName;
     export let hoverStateName;
@@ -22,14 +23,19 @@
             <span class="rucc">
                 <span class="rucc__label">RUCC </span>
                 <span class="rucc__id">{hoverCountyRuccCode}</span>
-                <span class="bubble"
+                <!--span class="bubble"
                     on:click={() => popup.classList.toggle("hidden")}
                     on:keypress={() => popup.classList.toggle("hidden")}
                     on:focus={() => popup.classList.remove("hidden")}
                     on:blur = {()=>popup.classList.add("hidden")}
                     >
                     <InfoIcon class="rucc__info" alt="Info icon" viewBox = "0 0 48 48" width=15 height=15/>
-                </span>
+                </span-->
+                <PopupTooltip width = 300 text = '<a href="https://www.ers.usda.gov/data-products/rural-urban-continuum-codes.aspx" target="_blank">RUCC</a>, or the rural-urban continuum code, is a government classification
+                    for describing the urbanicity or rurality of a county. The codes range from 1, the most urban, to
+                    9, the most rural. Factors like population size, level of urbanization, and proximity to a
+                    metropolitan area determine a county’s RUCC. In our key findings below, we define urban counties as RUCCs 1 through 3 and rural counties as RUCCs 4 through 9 using the 
+                    <a href="https://www.ers.usda.gov/data-products/rural-urban-continuum-codes/" target="_blank">updated RUCCs from 2023</a>. Data for 2022 use the RUCCs from 2013. '/>
                 
             </span>
         </h6>
@@ -40,7 +46,7 @@
                 {hoverCountyName}
             {/if}
         </h3> 
-        <div class="rucc-explained-popup hidden" bind:this={popup}>
+        <!--div class="rucc-explained-popup hidden" bind:this={popup}>
             <div class="close-rucc" 
                 style="background-image: url({iconClose});"
                 on:click = {() => popup.classList.add("hidden")} 
@@ -50,8 +56,9 @@
             <a href="https://www.ers.usda.gov/data-products/rural-urban-continuum-codes.aspx" target="_blank">RUCC</a>, or the rural-urban continuum code, is a government classification
             for describing the urbanicity or rurality of a county. The codes range from 1, the most urban, to
             9, the most rural. Factors like population size, level of urbanization, and proximity to a
-            metropolitan area determine a county’s RUCC. In our key findings below, we define urban counties as RUCCs 1 through 3 and rural counties as RUCCs 4 through 9. 
-        </div>
+            metropolitan area determine a county’s RUCC. In our key findings below, we define urban counties as RUCCs 1 through 3 and rural counties as RUCCs 4 through 9 using the 
+            <a href="https://www.ers.usda.gov/data-products/rural-urban-continuum-codes/" target="_blank">updated RUCCs from 2023</a>. Data for 2022 use the RUCCs from 2013. 
+        </div-->
     </div>
     
 </div>

@@ -11,10 +11,15 @@
   import ResetIcon2 from "./assets/reset-button-10.svg";
 
   //export controlling data for/from other modules
-  export let shapefileLocation;
-  export let shapefileObjectName;
+  export let allShapefileLocations;
+  export let allShapefileObjectNames;
   export let shapefileAccessor;
   export let shapeColName;
+
+  let shapefileLocation = ""
+  let shapefileObjectName = ""
+  let shapefileFeatures = []
+
   export let outlineColor;
   export let dataLocation;
   export let dataCols;
@@ -41,47 +46,95 @@
   export let nationalPrices;
   export let weHaveData = true;
 
+  //holds the element of the map for use in GA4
+  let mapEl;
   // holds geographic data once it is loaded
-  let shapefile;
+  let shapefile = {};
+
+  let shapefileInit = {};
   // holds raw data from csv
-  let rawData = [];
+  let rawData = {};
+  let data;
   let naFlag = false;
   // holds reference to any highlighted feature on the map
   let highlightedFeature = null;
   // boolean that holds state of click focus
   let clickFocus = false;
   //reset this reactively based on mousein
+  
+  $: currentMapKey = value.substr(-4).toString() == "2022" ? "2021" : value.substr(-4).toString()
+  $: currentDataKey = value.substr(-4).toString()
+  $: currentRuccKey = "rucc_"+currentDataKey
+
+
+
+  // lifecycle method onMount: run when component is added to the DOM
+  onMount(async () => {
+
+    // load csv data
+    rawData = await d3.csv(dataLocation);
+
+    allShapefileLocations.split("|").forEach( async (location) => {
+      
+      let key = location.split('.')[1].substr(-4).toString()
+
+      // load shapefile data
+      let thisShapefile = await fetch(location).then((d) => d.json());
+      shapefile[key] = thisShapefile;
+
+      //create our jsons
+      let accessor = allShapefileObjectNames.split("|").find((e) => e.includes(key))
+      shapefileInit[key] = topojson.feature(thisShapefile, thisShapefile.objects[accessor])
+    })
+    
+  });
+
+
+  $: shapefileLocation = allShapefileLocations.split("|").find((e) => e.includes(currentMapKey))
+  $: shapefileObjectName = allShapefileObjectNames.split("|").find((e) => e.includes(currentMapKey))
+
+
+  // $: allShapefileLocations.split("|").forEach((location) => {
+  //   if (shapefileInit == null) shapefileInit = []
+  //   let key = location.split('.')[0].substr(-4)
+  //   shapefileInit.push({key : topojson.feature(shapefile[key], shapefile[key].objects[shapefileObjectName])})
+  // })
 
   // reactively convert raw topojson to geojson
-  $: shapefileInit = shapefile
-    ? topojson.feature(shapefile, shapefile.objects[shapefileObjectName])
-    : null;
+  // $: if (shapefileObjectName) { 
+  //   shapefileInit = shapefile
+  //   ? topojson.feature(shapefile, shapefile.objects[shapefileObjectName])
+  //   : null;
+  // }
 
   // reactively grab the features array from the geojson
-  $: shapefileFeatures = shapefileInit ? shapefileInit.features : [];
+  $: if (currentMapKey) {
+    shapefileFeatures = shapefileInit[currentMapKey] ? shapefileInit[currentMapKey].features : [];
+  }
 
   // reactively split the raw cols prop into an array of vars
   $: vars = dataCols.split(",");
 
   // reactively convert any provided vars to numeric values
-  $: data = rawData.map((d) => {
-    let obj = {};
-    vars.forEach((v) => {
-      obj[v] = +d[v];
-    });
-    return { ...d, ...obj };
-  });
+  $: data = rawData.length > 0 ? rawData.map((d) => {
+      let obj = {};
+      vars.forEach((v) => {
+        obj[v] = +d[v];
+      });
+      return { ...d, ...obj };
+    }) : [];
+  
   
   //makes a list of counties to send to sidebar for search
-  $: allCounties = data.map((item)=> {
+  $: allCounties = data ? data.map((item)=> {
     return {location:item['countystate']};
-  })
+  }) : []
 
   // reactively create projection to fit the shapefile to the area based on the width variable
   $: projectionFun = albersProjectionFlag
     ? d3.geoAlbersUsa()
     : d3.geoMercator();
-  $: projection = projectionFun.fitSize([width, height], shapefileInit);
+  $: projection = projectionFun.fitSize([width, height], shapefileInit[currentMapKey]);
 
   // reactively create a d3 path function based on the projection
   $: path = d3.geoPath().projection(projection);
@@ -97,8 +150,8 @@
   // and merge by fips
   $: Object.keys(fips).forEach(function(fip) {
       let state = topojson.merge(
-          shapefile,
-          shapefile.objects[shapefileObjectName].geometries.filter(function(d) {
+          shapefile[currentMapKey],
+          shapefile[currentMapKey].objects[shapefileObjectName].geometries.filter(function(d) {
               return d.properties.GEOID - d.properties.GEOID % 1000 == +fip;
           })
       );
@@ -175,6 +228,7 @@
 
   // function that takes data and a metric key and returns a Map for easy lookup
   let dataMapFun = (inputData, metric, col) => {
+    if (!inputData) return 0;
     let dm = new Map();
     inputData.forEach((d, i) => {
       dm.set(Number(d[col]), d[metric]);
@@ -193,17 +247,30 @@
   // this is for what to fill our text with on load/hover not on map
   $: nationalPrices = 
   [
-    ["0.29", "2.43", "3.14", colorScale(.29)], //some hard-coded data for usa
-    ["0.15", "2.74", "3.14", colorScale(.15)] 
+    //[pct gap, max snap benefit, avg meal cost, scale(pct gap)]
+    //some hard-coded data for usa
+    ["0.19","2.84","3.37",colorScale(.19)], //oct-dec 23
+    ["0.23","2.74","3.37",colorScale(.23)], //jan-oct 23
+    ["0.15", "2.74", "3.14", colorScale(.15)], //oct-dec 22
+    ["0.29", "2.43", "3.14", colorScale(.29)], //jan-oct 22 
   ] 
 
   $: if (value != "") clearHighlight() //if we deselect any timeframes, unselect county
+  $: if (value) checkForBadCountyOnNewMap() //if value changes, we'll check for bad county and remove highlight if true
+
+  let checkForBadCountyOnNewMap = () => {
+    if (!highlightedFeature) return;
+    if (highlightedFeature.properties.STATE_NAME == "Connecticut" && (currentMapKey == "2023" || currentMapKey == "2021")){
+      clickFocus = !clickFocus
+      clearHighlight()
+    }
+  }
 
   // create number formatting function based on currently select dropdown value
   let formatTooltip = (which, percent, county, state) => {
 
     let format = d3.format(
-      dataColsFormat.split("|")[dataCols.split(",").indexOf(which)] ?? ",.0f"
+      dataColsFormat.split("|")[dataCols.split(",").indexOf(which)] ?? ".0%"
     );
 
     if (percent > 0){
@@ -262,17 +329,22 @@
       if (!isNaN(lookupData(feature))){
         hoverCountyName = feature.properties.NAMELSAD
         hoverStateName = feature.properties.STATE_NAME;
-        hoverCountyRuccCode = lookupProps(feature, "rucc");
-        let snapVar = "maxsnap_" + (value == "percent_snap_gap_jansept2022" ? "jansept2022" : "octdec2022"); //convert to a switchCase by possible value for future
+        hoverCountyRuccCode = lookupProps(feature, currentRuccKey);
+        let snapVar = "maxsnap"+value.substring(16)
         hoverSnapPrice = lookupProps(feature,snapVar)
-        hoverAveragePrice = lookupProps(feature,"costpermeal_2022")
+        hoverAveragePrice = lookupProps(feature,"costpermeal_"+currentDataKey)
         hoverPercentGap = lookupProps(feature, value)
         hoverColor = colorScale(lookupData(feature))
         hoverTextColor = lookupData(feature) > .25 ? "white" : "black"
-        hoverAllPrices = [
-          [lookupProps(feature, "percent_snap_gap_jansept2022"), lookupProps(feature, "maxsnap_jansept2022"), lookupProps(feature, "costpermeal_2022"), colorScale(lookupProps(feature, "percent_snap_gap_jansept2022" ))],
-          [lookupProps(feature, "percent_snap_gap_octdec2022"), lookupProps(feature, "maxsnap_octdec2022"), lookupProps(feature, "costpermeal_2022"), colorScale(lookupProps(feature, "percent_snap_gap_octdec2022"))]
-        ]
+        hoverAllPrices = []
+        dataCols.split(',').forEach((timeframe_var)=> {
+          let timeframe_shorthand = timeframe_var.substring(16)
+          hoverAllPrices.push([lookupProps(feature, timeframe_var),
+                               lookupProps(feature, "maxsnap"+timeframe_shorthand), 
+                               lookupProps(feature, "costpermeal_"+currentDataKey), 
+                               colorScale(lookupProps(feature, "percent_snap_gap"+timeframe_shorthand ))
+                              ])
+        })
         weHaveData = true;
       } else { //no data for this county-- show national average -- could probably simply these two cases
         hoverCountyName = feature.properties.NAMELSAD
@@ -280,7 +352,8 @@
         hoverStateName = feature.properties.STATE_NAME;
         hoverAllPrices = []
 
-        let dataColIndex = (value == dataCols.split(',')[0]) ? 0 : 1
+        //let dataColIndex = (value == dataCols.split(',')[0]) ? 0 : 1
+        let dataColIndex = dataCols.split(',').indexOf(value)
         hoverPercentGap = nationalPrices[dataColIndex][0]
         hoverSnapPrice = nationalPrices[dataColIndex][1]
         hoverAveragePrice = nationalPrices[dataColIndex][2]
@@ -302,8 +375,6 @@
     ) {
       updateExternalData(feature);
     }
-
-    console.log(data[0])
 
     // alternate click focus
     clickFocus = !clickFocus;
@@ -336,7 +407,8 @@
       hoverStateName = "State"
       hoverAllPrices = [] //I'm using this==empty as a isNational flag
 
-      let dataColIndex = (value == dataCols.split(',')[0]) ? 0 : 1 //which timeframe is active? use the index to set national vals
+      //let dataColIndex = (value == dataCols.split(',')[0]) ? 0 : 1 //which timeframe is active? use the index to set national vals
+      let dataColIndex = dataCols.split(',').indexOf(value)
       hoverPercentGap = nationalPrices[dataColIndex][0]
       hoverSnapPrice = nationalPrices[dataColIndex][1]
       hoverAveragePrice = nationalPrices[dataColIndex][2]
@@ -357,28 +429,17 @@
 		  .call(zoom.scaleTo, 1);
   }
 
+  //updated to use 2023 version of dataviz analytics
   let logClickToGA = (locationName) => {
     gtag('event',
-            'button_click', //eventName
+            'dataviz_click',
             {
-                'firing-module-name':'snap-map', //firingModuleName
-                'target-classes':"chart-container",
-                'target-id':"",
-                'target-text':"I'm the map",
-                'click-target': locationName
+                'dataviz_title':'snap-farm-bill-map', 
+                'dataviz_target':mapEl,
+                'dataviz_detail': "map_click--" + locationName
             }
         )
   }
-
-  // lifecycle method onMount: run when component is added to the DOM
-  onMount(async () => {
-    // load shapefile data
-    shapefile = await fetch(shapefileLocation).then((d) => d.json());
-    // load csv data
-    rawData = await d3.csv(dataLocation);
-
-
-  });
 
 </script>
 
@@ -386,11 +447,11 @@
 
 
 <!-- chart container -->
-<div id="map" class="chart-container">
+<div id="map" class="chart-container" bind:this = {mapEl}>
     <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
     <svg viewBox="0 0 {width} {height}" bind:this={svgEl} role="img" tabindex="0">
       <!-- <desc id="desc" /> -->
-      <title>{descText.split("///")[dataCols.split(",").indexOf(value)]}</title>
+      <title>{descText.split("///")[dataCols.split(",").indexOf(value)].trim()}</title>
       <!-- if there is data to load, show the <g>  -->
       {#if dataMap.size > 0}
         <g transform="translate({zoomTransform.x}, {zoomTransform.y}) scale({zoomTransform.k})">
@@ -400,10 +461,9 @@
             <!-- if the feature is not highlighted, add <path> here-->
             <!-- if ALL rucc is selected or this feature matches selected RUCC, make it hoverable. otherwise, change the opacity instead -->
             {#if _.get(feature, shapefileAccessor) !== _.get(highlightedFeature, shapefileAccessor)}
-              {#if ruccSelection.length == 0 || ruccSelection.includes(+lookupProps(feature,"rucc"))}
+              {#if ruccSelection.length == 0 || ruccSelection.includes(+lookupProps(feature,currentRuccKey))}
               <path
                 tabindex="-1"
-                role="button"
                 d={path(feature)}
                 stroke={outlineColor}
                 stroke-width={1 / (2* zoomTransform.k)}
@@ -419,12 +479,11 @@
               {:else}
               <path
                 tabindex="-1"
-                role="button"
                 d={path(feature)}
                 stroke={outlineColor}
                 stroke-width={1 / (2* zoomTransform.k)}
-                fill={(ruccSelection.length == 0 || ruccSelection.includes(+lookupProps(feature,"rucc"))) ? colorScale(lookupData(feature)) : "#9d9d9d"}
-                opacity= {(ruccSelection.length == 0 || ruccSelection.includes(+lookupProps(feature,"rucc"))) ? 1 : .25}
+                fill={(ruccSelection.length == 0 || ruccSelection.includes(+lookupProps(feature,currentRuccKey))) ? colorScale(lookupData(feature)) : "#9d9d9d"}
+                opacity= {(ruccSelection.length == 0 || ruccSelection.includes(+lookupProps(feature,currentRuccKey))) ? 1 : .25}
               >
                 <title>{formatTooltip(value, lookupData(feature), hoverCountyName, hoverStateName)}</title>
               </path>
@@ -435,7 +494,6 @@
           {#each states as state}
           <path
             tabindex="-1"
-            role="button"
             d={path(state)}
             stroke={ruccSelection.length == 0 ? "white" : "black"}
             fill=none
@@ -475,6 +533,10 @@
   </div>
 
 <style>
+
+path,path:focus,path:hover{
+    outline:none;
+}
 
   .zoom-controls{
     position: relative;
